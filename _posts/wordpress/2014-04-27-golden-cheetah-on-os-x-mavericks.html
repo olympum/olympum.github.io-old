@@ -37,10 +37,10 @@ cp src/gcconfig.pri.in src/gcconfig.pri
 <p>We edit <code>src/gcconfig.pri</code> to uncomment the OSX options:</p>
 <pre><code># Uncomment this line if you have SDK 10.7 or higher
 DEFINES += GC_HAVE_LION
-
-#uncomment below if you are running on the 10.9 developer preview
+# uncomment below if you are running on the 10.9 developer preview
 INCLUDEPATH += /Library/Developer/CommandLineTools/SDKs/MacOSX10.9.sdk/usr/include/ 
 </code></pre>
+
 <p>To enable the USB2 ANT+ dongle support (libusb-compat provides a 0.1<br />
 version wrapper interface using the libusb 1.0 implementation):</p>
 <pre><code>brew install libusb-compat
