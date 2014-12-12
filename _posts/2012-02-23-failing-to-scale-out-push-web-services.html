@@ -71,7 +71,7 @@ asymptotically reach the point where all nodes hold consumer connections for a<b
 given channel, all we really need to do is keep a list of all nodes in the<br />
 cluster. Some centralized agent keeps a directory of all active peers holding<br />
 consumer connections, e.g. a Zookeeper ensemble.</p>
-<p><img src="assets/design.png" alt="Ring-based Cluster" /></p>
+<p><img src="{{ site.base_url }}/assets/design.png" alt="Ring-based Cluster" /></p>
 <p>Consumers get uniformly connected to the nodes in the cluster by a "good"<br />
 load-balancing scheme. Since any node can hold connections to consumers on any<br />
 channel, there is therefore no snapshot of a channel's consumers, and to be<br />
