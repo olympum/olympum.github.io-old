@@ -1,0 +1,54 @@
+---
+layout: page
+title: GtkGL#
+date: 2009-03-12 16:10:34.000000000 +00:00
+categories: []
+tags: []
+status: draft
+type: page
+published: false
+meta:
+  _edit_last: '1'
+  _wp_page_template: default
+author:
+  login: admin
+  email: brunofr@olympum.com
+  display_name: Bruno Fernandez-Ruiz
+  first_name: Bruno
+  last_name: Fernandez-Ruiz
+---
+<p>GtkGL# is a managed .NET assembly for using the OpenGL graphics library together with the Gtk# windowing toolkit. GtkGL# is free software, and is licensed under a permissive 3-clause BSD license. See COPYING for license details.</p>
+<p>I needed to draw 2D network graphs and animations of the Simetron simulator. OpenGL is supported by graphic hardware vendors, so it basically cannot get any faster! I found no support for OpenGL in Gtk#, which is the widget toolkit we use in Simetron. I needed something like CsGL, which allows you to use OpenGL in System.Windows.Forms, but for Gtk#.</p>
+<p>GtkGL# has been tested to work on Linux. I don't have access to Windows, so you should not expect it to work on Windows without modifications.</p>
+<p><a href="http://www.opengl.org/">OpenGL</a> is a royalty-free platform-independent rendering API. OpenGL is supported by most of the graphic card manufacturers, and when hardware accelaration is available, OpenGL provides one of the best performance for 3D/2D graphics. For Linux, you can get free OpenGL libraries from XFree86/Mesa.</p>
+<p><a href="http://gtk-sharp.sf.net/">Gtk#</a> is an open source .NET language binding for the Gtk+ toolkit and assorted GNOME libraries.</p>
+<p><a href="http://www.go-mono.com/">Mono</a> is an open source implementation of the .NET framework.</p>
+<h2>Dependencies</h2>
+<p>The only native libraries that GtkGL# depends on are XLib/X11 and OpenGL/Mesa. GtkGL# uses glX functions, meaning that you need X11 to be installed. X11 is normally installed on most Linux boxes, and it is available both for Linux and for Cygwin on Windows (not tested).</p>
+<p>For the managed side of things, you will to have Mono and Gtk# installed. GtkGL# has been tested against Gtk# 0.13 and Mono 0.28 releases.</p>
+<h2>Configuration</h2>
+<p>GtkGL# uses the GNU auto* tool chain. To ensure that Mono picks up the shared libraries while loading you will need to pass the path where Mono is installed to the <code>autogen.sh</code> or <code>configure</code> script (depends whether you checked out the code from CVS or got a tarball). For example, given that Mono is intalled in <code>/opt/mono</code> and that you are using a CVS checkout:</p>
+<p><code><br />
+$ ./autogen.sh --prefix=/opt/mono<br />
+$ make<br />
+$ make install<br />
+</code></p>
+<p>Among others, install will copy the following files into your Mono installation:</p>
+<p><code><br />
+$prefix/lib/libgtkgl_sharp.so<br />
+$prefix/lib/gtkglsharp.dll<br />
+</code></p>
+<h2>Usage and Samples</h2>
+<p>You can find GtkGL# samples under the samples directory.</p>
+<h2>Known Bugs</h2>
+<p>On some versions of OpenGL/Mesa, the double buffer does not seem to work always correctly, and the widget may become blank. Resizing the widget fixes the problem.</p>
+<h2>Download</h2>
+<p>You can download the latest binary release of GtkGL# from the <a href="http://forge.novell.com/modules/xfmod/project/showfiles.php?group_id=1309">Novell project page</a>. Alternatively, you can obtain the sources from the <a href="http://forge.novell.com/modules/xfmod/cvs/cvspage.php/simetron/">CVS repository</a>.</p>
+<h2>Screenshots</h2>
+<p>Getting the traditional GL gears example to work was straight forward. You can find the C# sources under the sample directory in the release tarball.</p>
+<p> </p>
+<p>[caption id="attachment_194" align="aligncenter" width="318" caption="Gears using GtkGL#"]<img class="size-full wp-image-194" title="gears-20030914" src="assets/gears-20030914.png" alt="Gears using GtkGL#" width="318" height="309" />[/caption]</p>
+<p> </p>
+<p> </p>
+<h2>Bugs</h2>
+<p>You can send questions, bugs and patches to brunofr _at_ olympum _dot_ com.</p>

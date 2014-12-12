@@ -1,0 +1,173 @@
+---
+layout: post
+title: The Cloud Search Open Source Landscape
+date: 2012-01-09 07:23:20.000000000 +00:00
+categories:
+- Architecture
+tags: []
+status: draft
+type: post
+published: false
+meta:
+  _edit_last: '1'
+author:
+  login: admin
+  email: brunofr@olympum.com
+  display_name: Bruno Fernandez-Ruiz
+  first_name: Bruno
+  last_name: Fernandez-Ruiz
+---
+<p>## Search Architecture 101</p>
+<p>To provide distributed search, and be able to encompass for increasing scale in queries and documents, the search index must be sharded. **Distributed indexing** may happen either by document sharding or by term sharding:</p>
+<p>1. By document: each shard has index for subset of docs. A K word query requires O(K*N) disk seeks on N shards.<br />
+2. By word: each shard has subset of words for all docs. A K word query requires O(K) disk seeks, but much higher network bandwidth needed to index.</p>
+<p>For most deployments, *sharding by document is the preferred approach* for providing distributed indexing.</p>
+<p>In addition to distributed indexing, search queries must be spread and routed to the relevant search nodes. The options for **distributed search** are:</p>
+<p>1. Dedicated load-balancer(s) in front of the search nodes. The corpus is broken into N shards, each replicated R times, for a total of RxN search nodes. A load-balancer picks one of the shard replica sets, and then fans out the query to the N shards in the replica set. This design introduces an additional point of complexity and is complex to scale elastically, but provides the best-possible query latency. This is the approach that Solr and Solandra follow.</p>
+<p>                                       query<br />
+										 |<br />
+										 |<br />
+										 v<br />
+                             replica balancing server<br />
+							 |                     |<br />
+							 |                     |<br />
+							 v                     v<br />
+		  shard routing web-server                shard routing web server<br />
+		   |         |         |				   |         |         |<br />
+		   |         |         |				   |         |         |<br />
+		   v         v         v		   		   v         v         v<br />
+		  shard     shard     shard		  		 shard     shard     shard</p>
+<p>2. Every search node is a peer and capable of answering any query, and the search node's storage system provides the distribution mechanisms for the index. This is simple from a serving standpoint, allows elastic cluster operations, but introduces additional latency. This is the approach that ElasticSearch and LuceneHbase follow.</p>
+<p>                                        query<br />
+										  |<br />
+										  |<br />
+										  v<br />
+					 layer 3 direct server return load balancer<br />
+					 |           |            |             |<br />
+					 |			 |			  |				|<br />
+					 v			 v			  v				v<br />
+                     node		node		 node		  node<br />
+					 |           |            |             |<br />
+					 |			 |			  |				|<br />
+					 v			 v			  v				v<br />
+		        	 search index in elastic distributed storage</p>
+<p>In [Apache Lucene](http://lucene.apache.org/), the index and search design looks like this:</p>
+<p>	{doc} --> IndexWriter --> FSDirectory <-- IndexReader <-- IndexSearcher <-- {query}<br />
+								  |<br />
+								  |<br />
+								  v<br />
+							   	disk</p>
+<p>In a load-balanced architecture, we can split the search index across Lucene instances and have the load balancer route and spread queries. This is powerful and extremely scalable, but architecturally it makes it more complex to scale elastically, as rebalancing shards is hard since the index needs to be fully recomputed. Solr follows this design.</p>
+<p>When following a peer-based search node design, there are two possible ways of performing distributed indexing with Lucene:</p>
+<p>1. Implementing custom `IndexWriter` and `IndexReader`, i.e. there are no index segment files, distribution is solved by an underlying distributed store and the indices are stored in a format optimized for that distributed store. This is relatively simple and is what Solandra and HBasene do. See [[article on LuceneHbase](http://www.infoq.com/articles/LuceneHbase)] for details. In this design, all search nodes are equal as the IndexReader reroutes behind the scenes.</p>
+<p>		{doc} --> IndexWriter --> FSDirectory <-- IndexReader <-- IndexSearcher <-- {query}<br />
+					  |					               |<br />
+					  |					               |<br />
+					  v					  			   v<br />
+				 Custom IndexWriter				Custom IndexReader<br />
+				      |                                |<br />
+				      |                                |<br />
+					  -----> Distributed Storage <------</p>
+<p>2. Implementing custom `FSDirectory`, i.e. index segment files are distributed across filesystems on multiple nodes. This is simple architecturally but harder to implement than (1). This is what ElasticSearch does. In this design, all nodes are "equal" and can be used for querying, as `FSDirectory` hides the distributed store.</p>
+<p>		{doc} --> IndexWriter --> FSDirectory <-- IndexReader <-- IndexSearcher <-- {query}<br />
+									  |<br />
+									  |<br />
+									  v<br />
+    						 Distributed storage</p>
+<p>## Concerns</p>
+<p>What are we looking for?</p>
+<p>* Distributed indexing<br />
+* Distributed querying<br />
+* Near real-time indexing<br />
+* Faceted search<br />
+* Hadoop and HBase friendly<br />
+* Custom scoring algorithms<br />
+* Custom indexing algorithms<br />
+* Maintainability<br />
+* Operability</p>
+<p>## Alternatives</p>
+<p>Alternatives (search systems):</p>
+<p>* Solr<br />
+* ElasticSearch<br />
+* Solandra<br />
+* HBasene<br />
+* Sensei (Zoie, Bobo)<br />
+* IndexTank<br />
+* Lily</p>
+<p>### Solr</p>
+<p>[Solr](http://lucene.apache.org/solr/) is the grandfather of all the Lucene-based search systems. Now part of Apache, and originally developed at CNET, Solr offers an HTTP indexer and query engine running on top of Lucene and Jetty. Solr offers a lot of features and has an active community. Historically Solr suffered from: (1) lack of distributed indexing, (2) complex distributed search, and (3) lock-collision between the indexer (writer) and the query engine (reader).</p>
+<p>Work has been done in trunk to introduce distributed search via Zookeeper. Index segment files are stored in each solr host in the file system, and Zookeper is used to coordinate the configuration. Search nodes are aware of each other and a search query can be sent to any node which will in turn distribute to all other nodes. To achieve scalability and HA replicas can be created and Solr will automatically load-balance.</p>
+<p>Distributed indexing is still not available. See [JIRA-2358](https://issues.apache.org/jira/browse/SOLR-2358). As a result the client initiating the doc indexing is responsible for distributing the indexing requests across the shards.</p>
+<p>In regards to the index reader/writer collision, inserts and updates may severely degrade read performance in Solr. By design, Solr is optimized for fast search (reads), and therefore indexes new documents as a batch, and installs a new version of the entire index. Installing a new index is costly and no way near real-time. By design, Solr is not trying to address this in the "persistent" form of the index (from Solr's wiki):</p>
+<p>>If you desire frequent new collections in order for your most recent changes to appear "live online", you must have both frequent commits/snapshots and frequent snappulls. The most frequently you can distribute index changes and maintain good performance is probably in the range of 1 to 5 minutes, depending on your reliance on caching for good query times, and the time it takes to autowarm those caches.</p>
+<p>> Cache autowarming may be crucial to performance. On one hand a new cache version must be populated with enough entries so that subsequent queries will be served from the cache after the system switches to the new version of the collection. On the other hand, autowarming (populating) a new collection could take a lot of time, especially since it uses only one thread and one CPU. If your settings fire off snapinstaller too frequently, then a Solr slave could be in the undesirable condition of handing-off queries to one (old) collection, and, while warming a new collection, a second “new” one could be snapped and begin warming!</p>
+<p>In trunk we can find some near real-time features. Soft commits are used to get the document in a near realtime view of the index. Hard commits ensure that documents are on stable storage. From the wiki:</p>
+<p>> A common configuration might be to 'hard' auto commit every 1-10 minutes and 'soft' auto commit every second. With this configuration, new documents will show up within about a second of being added, and if the power goes out, you will be certain to have a consistent index up to the last 'hard' commit.</p>
+<p>In summary, pros:</p>
+<p>* Large community support.<br />
+* Large deployments.<br />
+* Actively developed.<br />
+* Feature rich.<br />
+* Fast (caches index in-memory from disk).<br />
+* Zk-based distributed search.</p>
+<p>Cons:</p>
+<p>* No distributed indexing.<br />
+* Manual replication and sharding.<br />
+* Difficult to distribute NRT "soft" commit.<br />
+* Tuning for writes is very difficult.</p>
+<p>### ElasticSearch</p>
+<p>[ElasticSearch](http://www.elasticsearch.org/) offers an out-of-the-box clustered search solution. Also, in contrast with Solr, ES is optimized for near real-time search, i.e. updates (writes). ES is based on Netty and offers an HTTP JSON protocol and a native thrift-based protocol. It uses an older version of Lucene that Solr, which means some Solr features are not available.</p>
+<p>ES fully leverages the `IndexWriter` and `IndexReader` from Lucene, and provides a custom implementation of `FSDirectory` that ensure replication and sharding.</p>
+<p>ES nodes are discovered either via multicast at startup, or via configuration (not Zk). ES is designed for all replica nodes to do the indexing to ensure a near real-time index. Documents are indexed on a primary shard and propagated to all replicas to ensure availability (index copies). ES manages failures and keeps automatically rebalancing index segments in the cluster, by splitting large indexes into smaller ones. Indices move as nodes are added or removed. To be able to recover in case of failures, ES keeps a long-term persistent copy of the indices in a "gateway" component.</p>
+<p>ES is primarily developed by Shay Banon. The code is well documented, and has good testing coverage. The user documentation is sufficient but could be improved.</p>
+<p>**Pros**:</p>
+<p>* Distributed indexing.<br />
+* Distributed search.<br />
+* Near real-time.<br />
+* Active community.<br />
+* Large (?) deployments at StumbleUpon and Mozilla.<br />
+* Fast for big indices.<br />
+* Multi-tenancy.<br />
+* Operability.</p>
+<p>**Cons**:</p>
+<p>* Multicast-based or config-based node discovery.<br />
+* Documentation.<br />
+* Recovery from failure (from "gateway").</p>
+<p>### Solandra</p>
+<p>[Solandra](http://www.datastax.com/wp-content/uploads/2011/07/Scaling_Solr_with_Cassandra-CassandraSF2011.pdf) is Solr on Cassandra. Solandra implements a custom `IndexReader` and the `IndexWriter` that store the index in Cassandra (instead of using segment files). Cassandra adds automatic sharding and replication, as well as near real-time (as there is no commit). Solr runs _in_ Cassandra (same JVM).</p>
+<p>**Pros**:</p>
+<p>* Distributed indexing<br />
+* Distributed search<br />
+* Near real-time search</p>
+<p>**Cons**:</p>
+<p>* Slow<br />
+* Memory greedy<br />
+* No community<br />
+* No support (?)<br />
+* Requires additional load-balancer<br />
+* Term-based partitioning</p>
+<p>Solandra By-passes most of Lucene's NRT index segment optimizations</p>
+<p>### HBasene</p>
+<p>[HBasene](https://github.com/akkumar/hbasene) is architecturally similar to Solandra, but using Hbase instead of Cassandra. HBasene does not seem to be maintained.</p>
+<p>### Sensei</p>
+<p>[Sensei](http://senseidb.com/) is LinkedIn's search system, which uses Zoie for near real-time search indexing and Bobo for faceted search. It follows the same approach as Solandra and HBasese, and provides implementations of `IndexReader` and `IndexWriter` that distributed the index. It's a complex J2EE application. Small (no?) community. **There are no unit tests in the open source version**.</p>
+<p>### IndexTank</p>
+<p>[IndexTank](https://github.com/linkedin/indextank-engine) wrote a search engine from the ground up. IndexTank uses parts of Lucene: the tokenizers, to be compatible with the query syntax, and the index format for persistence on disk. **There are no unit tests in the open source version**.</p>
+<p>### Lily</p>
+<p>[Lily](http://docs.outerthought.org/lily-docs-current/ext/toc/) is a Solr based system. The index is stored in Solr, and the original document in HBase. Lily adds automatic distributed indexing and routing on top of Solr. It shares the same limitation with Solr that it's not elastic:</p>
+<p>> Shards cannot be added or removed on the fly: if you decide you want more or less shards, you need to define a new index and re-index your content into that new index. Nonetheless, Lily allows changing the sharding configuration of existing indexes on the fly without complaining. When doing this, working indexers will be restarted to take the new configuration into account (a running index re-building job would be unaffected). You have to consider yourself if the changes you make have sense without rebuilding the index.</p>
+<p>## Summary</p>
+<p>First in terms of high-level design choices:</p>
+<p>* Document-based partitioning is the way to go for most use cases.<br />
+* Elasticity and multi-tenancy can only be achieved realistically in peer search node solutions.</p>
+<p>In terms of implementation alternatives:</p>
+<p>* IndexTank and Sensei get ruled out because of the no-availability of unit tests.<br />
+* Solr and Lily get ruled out because they do not offer a peer search solution.<br />
+* Solandra gets ruled out because it requires Cassandra.</p>
+<p>ElasticSearch and Lucene on HBase are the best solutions to the problem:</p>
+<p>* ElasticSeach requires work to add a more cloud-friendly node discovery mechanism and an ability to access the search index segments from Hadoop.<br />
+* Lucene on Hbase requires substantial work and ongoing support in order to be able to compete in performance and scalability (cost of scaling) with ElasticSearch, as less of Lucene's optimized index segment infrastructure is used.</p>
+<p>## Other Resources</p>
+<p>* [Lucene at twitter (PDF)](http://www.lucenerevolution.org/sites/default/files/Lucene%20Rev%20Preso%20Busch%20Realtime_Search_LR1010.pdf)<br />
+* [ElasticSearch and Solr feature comparison (Google Docs)](https://docs.google.com/present/view?id=dc6zhtt5_1frfxwfff&pli=1)<br />
+* [Google's search system design evolution (video)](http://videolectures.net/wsdm09_dean_cblirs/)</p>

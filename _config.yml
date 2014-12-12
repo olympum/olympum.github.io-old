@@ -1,0 +1,14 @@
+# Site settings
+title: random thoughts from a 0xCAFED00D
+email: brunofr@olympum.com
+description: > # this means to ignore newlines until "baseurl:"
+  random thoughts from bruno fernandez-ruiz
+baseurl: "" # the subpath of your site, e.g. /blog/
+url: "http://www.olympum.com" # the base hostname & protocol for your site
+twitter_username: olympum
+github_username:  olympum
+highlighter: pygments
+permalink: /:categories/:title/
+
+# Build settings
+markdown: kramdown

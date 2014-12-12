@@ -1,0 +1,86 @@
+---
+layout: post
+title: A Home Backup Strategy
+date: 2011-12-09 06:07:53.000000000 +00:00
+categories:
+- Future
+tags: []
+status: publish
+type: post
+published: true
+meta:
+  tmac_last_id: '531409133556076544'
+  _jetpack_related_posts_cache: a:1:{s:32:"8f6677c9d6b0f903e98ad32ec61f8deb";a:2:{s:7:"expires";i:1415514431;s:7:"payload";a:3:{i:0;a:1:{s:2:"id";i:225;}i:1;a:1:{s:2:"id";i:251;}i:2;a:1:{s:2:"id";i:21;}}}}
+  _wpcom_is_markdown: '1'
+  _edit_last: '1'
+author:
+  login: admin
+  email: brunofr@olympum.com
+  display_name: Bruno Fernandez-Ruiz
+  first_name: Bruno
+  last_name: Fernandez-Ruiz
+---
+<p>For years I've been continuously fighting with backups. I have not been<br />
+particularly good or consistent at it. We've been okay with Time Machine and<br />
+Carbon Copy Cloner, but the recent addition of a digital SLR to our gadget<br />
+collection has meant running out of space on our shared home drive.</p>
+<p>Historically I'd been using a WD My Book 2x1 TB RAID1 array connected to an<br />
+Apple Airport Extreme and shared via AirDisk (afp). We had Time Machine backup<br />
+all the computers in the house in the AirDisk. We'd also store our photos and<br />
+videos, etc. in the AirDisk. Aside running out of space, we had no good<br />
+offsite strategy. Given that our digital picture collection is continuously<br />
+becoming more and more valuable as a family history artifact, I though it was<br />
+time to address this properly, rather than just adding more space.</p>
+<p>I started by classifying the risk associated with each data type:</p>
+<ul>
+<li><strong>Personal files</strong>: document scans, photos, videos, etc. This is the<br />
+critical part of the equation. In case of fire or theft we'd have no<br />
+replacement and the loss would be HUGE.</li>
+<li><strong>Shared Media</strong>: movies, music, etc. These are regrettable if lost, but can<br />
+be restore. I know how to find them back, even though it might be painful or<br />
+costly.</li>
+<li><strong>Backups</strong>: the time machine backups from our home computers. Since we<br />
+have the laptops plus the backup, I was not too worried about losing this.</li>
+</ul>
+<p>Since no all data is born equal, the required reliability levels vary. For<br />
+personal files, I want to be covered against hardware failures. For the other<br />
+kinds, I don't mind that much.</p>
+<p>Additionally, for videos, I want to have the ability to connect the storage<br />
+unit directly to my computer while editing (my experience editing over the<br />
+network has not been great).</p>
+<p>Finally, I really wanted an offsite backup for our personal data.</p>
+<p>Given these constrains, I struggled to find a good (cost-effective)<br />
+combination, and since I think I've found something that works well for me, I<br />
+thought I'd share with others just in case this helps:</p>
+<ul>
+<li>Airport Extreme Station 802.11n 2nd Generation (100/1000) (any 1 Gbps switch<br />
+would do).</li>
+<li>Buffalo LinkStation Pro Duo 2x3 TB (NAS), connected to AES via 1 Gbps<br />
+ethernet. Setup as RAID1 and exposing two afp shares (Personal, Media) and a<br />
+Time Machine 'Backup' share that each computer uses to create a separate<br />
+sparsebundle.</li>
+<li>2x WD My Book 2x1 TB on RAID0, mounted 'usbdisk', connected via USB to<br />
+LinkStation and used to backup incrementally every night from the NAS<br />
+internal disks. Every week I rotate the USB WD drive units between office<br />
+and home.</li>
+<li>If I want to edit video, I unmount the USB drive and connect via Firewire to<br />
+my computer for doing video edits. When I mount it back, I manually copy the<br />
+edits back to the NAS internal drives. This is the only manual step in the<br />
+process.</li>
+<li>The media files are exposed through the embedded server in the LinkStation<br />
+via UPnP and iTunes Server. This allows me to use Boxee on any computer (and<br />
+a patched Apple TV 2nd gen) to watch our videos. We also share iTunes music<br />
+this way without having to share libraries.</li>
+</ul>
+<p>I ended up putting all the data under RAID1, but I think the cost is low since<br />
+we mostly only read from the array (except the backups). With this setup:</p>
+<ul>
+<li>We have Time Machine for all computers in the house, happening over the<br />
+network and transparently.</li>
+<li>We can access all data both via afp mounts as well as directly via USB/FW<br />
+for intensive reads / edits.</li>
+<li>We have an offsite copy.</li>
+</ul>
+<p>Overall, I am happy with the setup. I was initially worried about using a<br />
+home-grade NAS, but even though the LS is slow for writes, it's actually fast<br />
+for reads, so I am happy.</p>
