@@ -20,30 +20,40 @@ author:
   first_name: Bruno
   last_name: Fernandez-Ruiz
 ---
-<p>Java (my nodejs-inspired NIO/Netty based HTTP server):</p>
-<pre><code>Server server = Http.createServer();
+{% include JB/setup %}
+
+First, in Java (my nodejs-inspired NIO/Netty based HTTP server):
+
+{% highlight java %}
+Server server = Http.createServer();
 server.setRequestListener(new RequestListener() {
     @Override
     public void service(ServerRequest request, ServerResponse response) {
-        HashMap&lt;String, String&gt; headers = new HashMap&lt;String, String&gt;();
+        HashMap<String, String> headers = new HashMap<String, String>();
         headers.put("Content-Type", "text/html; charset=utf-8");
         headers.put("Content-Length", "47");
         response.writeHeader(200, headers);
-        response.end("&lt;html&gt;&lt;body&gt;&lt;h1&gt;hüllo world&lt;/h1&gt;&lt;/body&gt;&lt;/html&gt;");
+        response.end("<html><body><h1>hello world</h1></body></html>");
     }
 });
 server.listen(8080);
-</code></pre>
-<p>Javascript:</p>
-<pre><code>http.createServer(function(req, res) {
+{% endhighlight %}
+
+Now, in Javascript:
+
+{% highlight js %}
+http.createServer(function(req, res) {
     res.writeHead(200, {"Content-Length": "47",
                         "Content-Type": "text/html; charset=utf-8"});
-    res.write("&lt;html&gt;&lt;body&gt;&lt;h1&gt;hüllo world&lt;/h1&gt;&lt;/body&gt;&lt;/html&gt;");
+    res.write("<html><body><h1>hello world</h1></body></html>");
     res.end();
 }).listen(8080);
-</code></pre>
-<p>My quick "smoke" benchmark results using ab (MBA, 2 cores, 10.6.6, 4 GB, 2.13 GHz). First Java:</p>
-<pre><code>$ ab -k -n 2000 -c 200  http://localhost:8080/
+{% endhighlight %}
+
+A quick "smoke" benchmark results using ab (MBA, 2 cores, 10.6.6, 4 GB, 2.13 GHz). First Java:
+
+{% highlight bash %}
+$ ab -k -n 2000 -c 200  http://localhost:8080/
 Time taken for tests:   0.127 seconds
 Complete requests:      2000
 Failed requests:        0
@@ -62,9 +72,12 @@ Connect:        0    0   1.6      0      10
 Processing:     1    5   2.9      5      16
 Waiting:        1    5   2.9      5      16
 Total:          1    6   3.4      5      19
-</code></pre>
-<p>and then nodejs (kriszyp/multi-node using node 0.2.5 on 2 nodes):</p>
-<pre><code>$ ab -k -n 2000 -c 200 http://127.0.0.1:8080/
+{% endhighlight %}
+
+and then nodejs (kriszyp/multi-node using node 0.2.5 on 2 nodes):
+
+{% highlight bash %}
+$ ab -k -n 2000 -c 200 http://127.0.0.1:8080/
 Time taken for tests:   0.225 seconds
 Complete requests:      2000
 Failed requests:        0
@@ -83,5 +96,6 @@ Connect:        0    1   1.9      0      11
 Processing:     0   18   3.7     18      28
 Waiting:        0   18   3.7     18      28
 Total:          0   18   4.5     18      39
-</code></pre>
-<p>So far, so good. I can now start adding Rhino.</p>
+{% endhighlight %}
+
+So far, so good. I can now start adding Rhino.
