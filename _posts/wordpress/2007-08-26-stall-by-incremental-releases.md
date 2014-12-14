@@ -18,7 +18,12 @@ author:
   first_name: Bruno
   last_name: Fernandez-Ruiz
 ---
-<p>Have you have ever been part of the inception of a software system that later became big and complex? Have you later felt the frustration of not being able to make further changes to the core architecture? Did you end up being taken hostage by the software? I did.</p>
+
+Have you have ever been part of the inception of a software system
+that later became big and complex? Have you later felt the frustration
+of not being able to make further changes to the core architecture?
+Did you end up being taken hostage by the software? I did.
+
 <p>We hope as developers to be able to adapt software as requirements and bugs arise, and to be able to organize our software releases accordingly. By doing incremental releases we hope to work with a stable code-base where we can release often. We then receive feedback more often and we are therefore agile and responsive to business needs.</p>
 <p>Until one day we become legacy. A competitor starting from scratch has been able to innovate and quickly implement these new cool features the market really wants. We can't catch up with them, because they don't have the legacy we have: the other thirty thousand features we need for all revenue-generating customers we have.</p>
 <p>We set ourselves to large regeneration plans, greenfield development. "This time around, we'll do it right", we say. Two to three years later, after again a cycle of incremental releases, we become again legacy.</p>
