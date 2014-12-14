@@ -20,7 +20,6 @@ author:
   first_name: Bruno
   last_name: Fernandez-Ruiz
 ---
-{% include JB/setup %}
 
 First, in Java (my nodejs-inspired NIO/Netty based HTTP server):
 
