@@ -4,8 +4,6 @@ published: true
 category : sports
 title: A Long Run in Marrakech
 ---
-{% include JB/setup %}
-
 For our yearly pre-Christmas family trip this year, we decided to
 visit the beautiful and vibrant city of Marrakech in Morocco. On the
 last day of our trip I got the chance to do a long run from the hotel.
